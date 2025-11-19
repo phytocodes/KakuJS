@@ -1,0 +1,11 @@
+{
+  "name": "@phytocodes/core-js",
+  "version": "0.0.1",
+  "author": {
+    "name": "phytocodes",
+    "url": "https://github.com/phytocodes"
+  },
+  "main": "src/index.js",
+  "private": true,
+  "type": "module"
+}
