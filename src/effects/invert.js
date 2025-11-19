@@ -22,7 +22,6 @@ export default function invert() {
 					targets: invertTarget,
 					className: 'is-invert'
 				},
-				markers: true,
 			});
 		}, el);
 	});
