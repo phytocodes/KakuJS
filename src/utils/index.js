@@ -1,2 +1,2 @@
-export * from './mediaQuery.js';
 export * from './dom.js';
+export * from './mediaQuery.js';
