@@ -5,7 +5,10 @@
     "name": "phytocodes",
     "url": "https://github.com/phytocodes"
   },
-  "main": "src/index.js",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "main": "src/index.js",
+  "dependencies": {
+    "gsap": "^3.13.0"
+  }
 }
