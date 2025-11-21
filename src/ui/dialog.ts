@@ -1,24 +1,24 @@
-export default function dialog() {
+interface DialogWithLastFocus extends HTMLDialogElement {
+	_lastFocus?: HTMLElement | null;
+}
 
-	const dialogs = document.querySelectorAll('dialog.dialog');
-	const openButtons = document.querySelectorAll('.js-dialog-open');
+export default function dialog(): void {
+	const dialogs = document.querySelectorAll<DialogWithLastFocus>('dialog.dialog');
+	const openButtons = document.querySelectorAll<HTMLButtonElement>('.js-dialog-open');
 
-	if (dialogs.length === 0) {
-		// console.warn('ダイアログ要素が見つかりませんでした。');
-		return;
-	}
+	if (dialogs.length === 0) return;
 
-	// --- キャッシュ: ID => dialog 要素 ---
-	const dialogMap = new Map();
-	dialogs.forEach(d => dialogMap.set(d.id, d));
+	// --- ID => dialog キャッシュ ---
+	const dialogMap = new Map<string, DialogWithLastFocus>();
+	dialogs.forEach((d) => dialogMap.set(d.id, d));
 
-	const isHashControlEnabled = (dialog) => dialog.dataset.hashControl === 'true';
+	const isHashControlEnabled = (dialog: DialogWithLastFocus) => dialog.dataset.hashControl === 'true';
 
-	// --- 閉じるアニメーション関数 ---
-	const closeDialogAnimated = (dialog) => {
+	// --- 閉じるアニメーション ---
+	const closeDialogAnimated = (dialog: DialogWithLastFocus) => {
 		if (!dialog.open || dialog.classList.contains('is-closing')) return;
 
-		// ハッシュ制御が有効なら URL をリセット
+		// ハッシュ制御リセット
 		if (isHashControlEnabled(dialog) && window.location.hash === `#${dialog.id}`) {
 			history.replaceState('', document.title, window.location.pathname + window.location.search);
 		}
@@ -26,7 +26,7 @@ export default function dialog() {
 		dialog.classList.remove('is-open');
 		dialog.classList.add('is-closing');
 
-		const onTransitionEnd = (e) => {
+		const onTransitionEnd = (e: TransitionEvent) => {
 			if (e.target !== dialog || e.propertyName !== 'opacity') return;
 			dialog.removeEventListener('transitionend', onTransitionEnd);
 			dialog.classList.remove('is-closing');
@@ -35,7 +35,7 @@ export default function dialog() {
 
 		dialog.addEventListener('transitionend', onTransitionEnd);
 
-		// フォールバック（transitionendが発火しない場合）
+		// フォールバック
 		const duration = parseFloat(getComputedStyle(dialog).transitionDuration) * 1000 || 400;
 		setTimeout(() => {
 			if (dialog.open) {
@@ -47,31 +47,29 @@ export default function dialog() {
 	};
 
 	// --- 開くボタン設定 ---
-	openButtons.forEach(button => {
-		// 初期状態: 閉じている
+	openButtons.forEach((button) => {
 		button.setAttribute('aria-expanded', 'false');
 		button.setAttribute('aria-haspopup', 'dialog');
 
-		button.addEventListener('click', (e) => {
+		button.addEventListener('click', (e: MouseEvent) => {
 			e.preventDefault();
 			const targetId = button.dataset.dialogTarget;
+			if (!targetId) return;
+
 			const targetDialog = dialogMap.get(targetId);
 			if (!targetDialog) return;
 
-			// フォーカス復帰用にボタンを保存
 			targetDialog._lastFocus = button;
 
 			targetDialog.classList.remove('is-closing');
 			if (!targetDialog.open) targetDialog.showModal();
 
-			// Safari対策: 次フレームでクラス付与
 			requestAnimationFrame(() => targetDialog.classList.add('is-open'));
 			button.setAttribute('aria-expanded', 'true');
 
 			document.body.style.overflow = 'hidden';
 
-			// overlayスクロール位置リセット
-			const container = targetDialog.querySelector('.dialog__overlay');
+			const container = targetDialog.querySelector<HTMLElement>('.dialog__overlay');
 			if (container) container.scrollTop = 0;
 
 			if (isHashControlEnabled(targetDialog)) {
@@ -81,51 +79,44 @@ export default function dialog() {
 	});
 
 	// --- ダイアログ閉じる処理 ---
-	dialogs.forEach(dialog => {
-		const inner = dialog.querySelector('.dialog__inner');
+	dialogs.forEach((dialog) => {
+		const inner = dialog.querySelector<HTMLElement>('.dialog__inner');
 
-		// 内部の閉じるボタン
-		dialog.querySelectorAll('.js-dialog-close').forEach(button => {
+		dialog.querySelectorAll<HTMLButtonElement>('.js-dialog-close').forEach((button) => {
 			button.addEventListener('click', () => closeDialogAnimated(dialog));
 		});
 
-		// オーバーレイクリックで閉じる
-		dialog.addEventListener('click', (e) => {
-			if (!inner.contains(e.target)) closeDialogAnimated(dialog);
+		dialog.addEventListener('click', (e: MouseEvent) => {
+			if (inner && !inner.contains(e.target as Node)) closeDialogAnimated(dialog);
 		});
 
-		// Esc キーで閉じる
-		dialog.addEventListener('cancel', (e) => {
+		dialog.addEventListener('cancel', (e: Event) => {
 			e.preventDefault();
 			closeDialogAnimated(dialog);
 		});
 
-		// 完全に閉じた後
 		dialog.addEventListener('close', () => {
 			document.body.style.overflow = '';
 
 			const opener = dialog._lastFocus;
-			if (opener && typeof opener.focus === 'function') {
-				setTimeout(() => opener.focus(), 0);
-			}
-
-			// aria-expanded を false に戻す
+			if (opener) setTimeout(() => opener.focus(), 0);
 			if (opener) opener.setAttribute('aria-expanded', 'false');
 
 			dialog._lastFocus = null;
 		});
 	});
 
-	// --- ハッシュで開閉制御 ---
+	// --- ハッシュ制御 ---
 	const shouldEnableHashControl = Array.from(dialogs).some(isHashControlEnabled);
 
 	if (shouldEnableHashControl) {
 		const handleHashChange = () => {
 			const hash = window.location.hash.substring(1);
 
-			dialogs.forEach(dialog => {
+			dialogs.forEach((dialog) => {
 				if (!isHashControlEnabled(dialog)) return;
-				const opener = document.querySelector(`.js-dialog-open[data-dialog-target="${dialog.id}"]`);
+
+				const opener = document.querySelector<HTMLButtonElement>(`.js-dialog-open[data-dialog-target="${dialog.id}"]`);
 
 				if (dialog.id === hash) {
 					if (!dialog.open) dialog.showModal();
@@ -133,8 +124,10 @@ export default function dialog() {
 					if (opener) opener.setAttribute('aria-expanded', 'true');
 
 					dialog._lastFocus = null;
-					const container = dialog.querySelector('.dialog__overlay');
+
+					const container = dialog.querySelector<HTMLElement>('.dialog__overlay');
 					if (container) container.scrollTop = 0;
+
 					document.body.style.overflow = 'hidden';
 				} else if (dialog.open && dialog.id !== hash) {
 					if (opener) opener.setAttribute('aria-expanded', 'false');
@@ -146,5 +139,4 @@ export default function dialog() {
 		window.addEventListener('load', handleHashChange);
 		window.addEventListener('hashchange', handleHashChange);
 	}
-
 }

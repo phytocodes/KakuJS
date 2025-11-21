@@ -1,1 +1,0 @@
-export const toggleClass = (el, className) => el.classList.toggle(className);

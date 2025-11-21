@@ -1,14 +1,15 @@
 {
-  "name": "@phytocodes/core-js",
-  "version": "0.0.1",
-  "author": {
-    "name": "phytocodes",
-    "url": "https://github.com/phytocodes"
-  },
-  "private": true,
-  "type": "module",
-  "main": "src/index.js",
-  "dependencies": {
-    "gsap": "^3.13.0"
-  }
+	"name": "@phytocodes/core-js",
+	"version": "0.0.1",
+	"author": {
+		"name": "phytocodes",
+		"url": "https://github.com/phytocodes"
+	},
+	"private": true,
+	"type": "module",
+	"main": "src/index.js",
+	"dependencies": {
+		"gsap": "^3.13.0",
+		"lenis": "^1.3.15"
+	}
 }
