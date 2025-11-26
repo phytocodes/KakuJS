@@ -17,11 +17,15 @@ export default function gnavToggle(): void {
 
 		if (isMobile) {
 			gnav.setAttribute('aria-hidden', isNavOpen ? 'false' : 'true');
-			toggles.forEach((btn) => btn.setAttribute('aria-expanded', isNavOpen ? 'true' : 'false'));
+			toggles.forEach((btn) => {
+				btn.setAttribute('aria-expanded', isNavOpen ? 'true' : 'false')
+			});
 			body.classList.remove(NAV_OPEN_CLASS);
 		} else {
 			gnav.setAttribute('aria-hidden', 'false');
-			toggles.forEach((btn) => btn.setAttribute('aria-expanded', 'false'));
+			toggles.forEach((btn) => {
+				btn.setAttribute('aria-expanded', 'false')
+			});
 			body.classList.remove(NAV_OPEN_CLASS);
 		}
 	};
@@ -32,7 +36,9 @@ export default function gnavToggle(): void {
 	const setNavState = (isOpen: boolean): void => {
 		body.classList.toggle(NAV_OPEN_CLASS, isOpen);
 
-		toggles.forEach((btn) => btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false'));
+		toggles.forEach((btn) => {
+			btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false')
+		});
 
 		if (isOpen) {
 			gnav.setAttribute('aria-hidden', 'false');
@@ -68,7 +74,9 @@ export default function gnavToggle(): void {
 		}
 	});
 
-	links.forEach((link) => link.addEventListener('click', () => setNavState(false)));
+	links.forEach((link) => {
+		link.addEventListener('click', () => setNavState(false))
+	});
 	if (overlay) overlay.addEventListener('click', () => setNavState(false));
 
 	window.addEventListener('resize', debounce(initState, 200));

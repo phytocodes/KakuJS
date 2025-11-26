@@ -1,16 +1,6 @@
 import gsap from 'gsap';
 import { SplitText } from 'gsap/SplitText';
 
-interface SplitTextResult {
-	chars: HTMLElement[];
-}
-
-type SplitTextOptions = {
-	type?: string;
-	tag?: string;
-	charsClass?: string;
-};
-
 gsap.registerPlugin(SplitText);
 
 export default function splitText(): void {

@@ -2,8 +2,14 @@
 	"editor.formatOnSave": true,
 	"editor.defaultFormatter": "esbenp.prettier-vscode",
 	"editor.codeActionsOnSave": {
-		"source.fixAll.eslint": "explicit",
+		"source.fixAll.biome": "explicit",
 		"source.fixAll.stylelint": "explicit"
+	},
+	"[json]": {
+		"editor.defaultFormatter": "biomejs.biome"
+	},
+	"[jsonc]": {
+		"editor.defaultFormatter": "biomejs.biome"
 	},
 	"stylelint.enable": true,
 	"stylelint.validate": ["scss"],
@@ -13,5 +19,6 @@
 	},
 	"intelephense.diagnostics.enable": true,
 	"intelephense.files.associations": ["*.php"],
+	"intelephense.environment.phpVersion": "8.1.0",
 	"intelephense.format.enable": true
 }

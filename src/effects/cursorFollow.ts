@@ -1,5 +1,5 @@
-import { mqDown } from '../utils';
 import gsap from 'gsap';
+import { mqDown } from '../utils';
 
 // dataset の型を拡張しておく
 interface CursorContainerDataset extends DOMStringMap {
@@ -39,7 +39,7 @@ export default function cursorFollow(): void {
 	// --- render loop ---
 	gsap.ticker.add(() => {
 		// adjust speed for higher refresh monitors
-		const dt = 1.0 - Math.pow(1.0 - speed, gsap.ticker.deltaRatio());
+		const dt = 1.0 - (1.0 - speed) ** gsap.ticker.deltaRatio();
 		pos.x += (mouse.x - pos.x) * dt;
 		pos.y += (mouse.y - pos.y) * dt;
 

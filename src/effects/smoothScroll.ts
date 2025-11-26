@@ -1,7 +1,7 @@
-import { mqUp } from '../utils';
-import Lenis, { LenisOptions } from 'lenis';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import Lenis, { type LenisOptions } from 'lenis';
+import { mqUp } from '../utils';
 
 gsap.registerPlugin(ScrollTrigger);
 

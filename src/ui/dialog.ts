@@ -10,7 +10,9 @@ export default function dialog(): void {
 
 	// --- ID => dialog キャッシュ ---
 	const dialogMap = new Map<string, DialogWithLastFocus>();
-	dialogs.forEach((d) => dialogMap.set(d.id, d));
+	dialogs.forEach((d) => {
+		dialogMap.set(d.id, d)
+	});
 
 	const isHashControlEnabled = (dialog: DialogWithLastFocus) => dialog.dataset.hashControl === 'true';
 

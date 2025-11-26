@@ -1,6 +1,7 @@
-import { mqUp, mqDown } from '../utils';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { mqDown, mqUp } from '../utils';
+
 gsap.registerPlugin(ScrollTrigger);
 
 const BREAKPOINT_KEY = 'sm';
