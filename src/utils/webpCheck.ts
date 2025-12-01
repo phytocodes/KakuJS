@@ -7,10 +7,8 @@ export function  webpCheck(classNameToApply: string = 'no-webp'): void {
 	img.onload = (): void => {
 		if (img.width > 0 && img.height > 0) {
 			// body.classList.add('webp');
-			console.log('WebP: Supported');
 		} else {
 			body.classList.add(classNameToApply);
-			console.log(`WebP: Unsupported (loaded but zero size). Class added: ${classNameToApply}`);
 		}
 	};
 
