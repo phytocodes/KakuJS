@@ -18,6 +18,8 @@ export default function splitText(): void {
 			charsClass: 'char-item',
 		});
 
+		target.setAttribute('role', 'text');
+
 		if (!split.chars || !split.chars.length) return;
 
 		// 各文字に遅延設定
