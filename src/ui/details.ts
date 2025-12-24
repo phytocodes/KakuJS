@@ -2,7 +2,7 @@ export default function details(): void {
 	const detailsList = document.querySelectorAll<HTMLDetailsElement>('.details');
 	const animTiming: KeyframeAnimationOptions = {
 		duration: 400,
-		easing: 'ease-out',
+		easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
 	};
 
 	detailsList.forEach((el) => {
