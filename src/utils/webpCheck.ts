@@ -1,10 +1,11 @@
-export function  webpCheck(classNameToApply: string = 'no-webp'): void {
+import type { KakuPlugin } from '../core/types';
 
-	const webpTestImage: string = 'data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==';
+function webpCheckFunction(classNameToApply: string = 'no-webp'): void {
+	const webpTestImage = 'data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==';
 	const img = new Image();
 	const body = document.body;
 
-	img.onload = (): void => {
+	img.onload = () => {
 		if (img.width > 0 && img.height > 0) {
 			// body.classList.add('webp');
 		} else {
@@ -12,10 +13,14 @@ export function  webpCheck(classNameToApply: string = 'no-webp'): void {
 		}
 	};
 
-	img.onerror = (): void => {
+	img.onerror = () => {
 		body.classList.add(classNameToApply);
-		console.log(`WebP: Unsupported (load error). Class added: ${classNameToApply}`);
 	};
 
 	img.src = webpTestImage;
 }
+
+export const webpCheck: KakuPlugin = {
+	phase: 'init',
+	init: () => webpCheckFunction(),
+};

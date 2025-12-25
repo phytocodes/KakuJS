@@ -1,7 +1,8 @@
 {
 	"recommendations": [
 		"biomejs.biome",
-		"bmewburn.vscode-intelephense-client",
-		"stylelint.vscode-stylelint"
+		"stylelint.vscode-stylelint",
+		"astro-build.astro-vscode",
+		"esbenp.prettier-vscode"
 	]
 }

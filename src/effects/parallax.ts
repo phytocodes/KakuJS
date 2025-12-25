@@ -1,5 +1,6 @@
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import type { KakuPlugin } from '../core/types';
 import { mqDown, mqUp } from '../utils';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -21,39 +22,45 @@ interface ParallaxDataset extends DOMStringMap {
 /**
  * パララックスエフェクト
  */
-export default function parallax(): void {
-	// NOTE: gsap.utils.toArray は Element | string の混在を返せるため型補正
-	const els = gsap.utils.toArray<HTMLElement>('.js-parallax');
-	if (!els.length) return;
+const parallax: KakuPlugin = {
+	phase: 'init',
 
-	const isPc = mqUp(BREAKPOINT_KEY);
-	const isSp = mqDown(BREAKPOINT_KEY);
+	init() {
+		// NOTE: gsap.utils.toArray は Element | string の混在を返せるため型補正
+		const els = gsap.utils.toArray<HTMLElement>('.js-parallax');
+		if (!els.length) return;
 
-	const initialY = isPc ? PC_Y_DEFAULT : SP_Y_DEFAULT;
-	const offset = isPc ? PC_OFFSET : '0px';
+		const isPc = mqUp(BREAKPOINT_KEY);
+		const isSp = mqDown(BREAKPOINT_KEY);
 
-	els.forEach((el) => {
-		// --- dataset を型拡張して利用できるようにする ---
-		const ds = el.dataset as ParallaxDataset;
+		const initialY = isPc ? PC_Y_DEFAULT : SP_Y_DEFAULT;
+		const offset = isPc ? PC_OFFSET : '0px';
 
-		const pcY = ds.parallaxY ?? initialY;
-		const Y = isSp && ds.parallaxSpY ? ds.parallaxSpY : pcY;
+		els.forEach((el) => {
+			// --- dataset を型拡張して利用できるようにする ---
+			const ds = el.dataset as ParallaxDataset;
 
-		const trigger = ds.parallaxTrigger ? `.${ds.parallaxTrigger}` : el;
+			const pcY = ds.parallaxY ?? initialY;
+			const Y = isSp && ds.parallaxSpY ? ds.parallaxSpY : pcY;
 
-		// start位置
-		const isStartTop = ds.parallaxStart === 'top';
-		const start = isStartTop ? `top ${offset}` : 'top bottom';
-		const end = isStartTop ? 'bottom top' : 'top top';
+			const trigger = ds.parallaxTrigger ? `.${ds.parallaxTrigger}` : el;
 
-		gsap.to(el, {
-			y: Y,
-			scrollTrigger: {
-				trigger,
-				start,
-				end,
-				scrub: SCRUB_VALUE,
-			},
+			// start位置
+			const isStartTop = ds.parallaxStart === 'top';
+			const start = isStartTop ? `top ${offset}` : 'top bottom';
+			const end = isStartTop ? 'bottom top' : 'top top';
+
+			gsap.to(el, {
+				y: Y,
+				scrollTrigger: {
+					trigger,
+					start,
+					end,
+					scrub: SCRUB_VALUE,
+				},
+			});
 		});
-	});
-}
+	},
+};
+
+export default parallax;

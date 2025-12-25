@@ -1,4 +1,4 @@
 export { debounce } from './debounce';
-export * from './dom';
+export { loadState } from './loadState';
 export * from './mediaQuery';
-export * from './webpCheck';
+export { webpCheck } from './webpCheck';

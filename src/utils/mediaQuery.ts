@@ -4,11 +4,11 @@ export const breakpoints: Record<BreakpointKey, number> = ['xs', 'sm', 'md', 'lg
 	(acc, key) => {
 		acc[key as BreakpointKey] = parseInt(
 			getComputedStyle(document.documentElement).getPropertyValue(`--breakpoint-${key}`).trim().replace('px', ''),
-			10
+			10,
 		);
 		return acc;
 	},
-	{} as Record<BreakpointKey, number>
+	{} as Record<BreakpointKey, number>,
 );
 
 export const mqUp = (bp1: BreakpointKey, bp2: BreakpointKey | null = null): boolean => {

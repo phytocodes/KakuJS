@@ -1,38 +1,48 @@
-export default function details(): void {
-	const detailsList = document.querySelectorAll<HTMLDetailsElement>('.details');
-	const animTiming: KeyframeAnimationOptions = {
-		duration: 400,
-		easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
-	};
+import type { KakuPlugin } from '../core/types';
 
-	detailsList.forEach((el) => {
-		const summary = el.querySelector<HTMLElement>('.details__summary');
-		const content = el.querySelector<HTMLElement>('.details__content');
-		if (!summary || !content) return;
+const details: KakuPlugin = {
+	phase: 'init',
 
-		// --- Accessibility ---
-		summary.setAttribute('role', 'button');
-		summary.setAttribute('aria-expanded', el.hasAttribute('open') ? 'true' : 'false');
+	init() {
+		const detailsList = document.querySelectorAll<HTMLDetailsElement>('.details');
+		if (!detailsList.length) return;
 
-		// --- Keyboard control ---
-		summary.addEventListener('keydown', (e: KeyboardEvent) => {
-			if (e.key === ' ' || e.key === 'Enter') {
-				e.preventDefault(); // avoid scroll
-			}
-		});
+		const animTiming: KeyframeAnimationOptions = {
+			duration: 400,
+			easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+		};
 
-		summary.addEventListener('keyup', (e: KeyboardEvent) => {
-			if (e.key === ' ' || e.key === 'Enter') {
+		detailsList.forEach((el) => {
+			const summary = el.querySelector<HTMLElement>('.details__summary');
+			const content = el.querySelector<HTMLElement>('.details__content');
+			if (!summary || !content) return;
+
+			// --- Accessibility ---
+			summary.setAttribute('role', 'button');
+			summary.setAttribute('aria-expanded', el.hasAttribute('open') ? 'true' : 'false');
+
+			// --- Keyboard control ---
+			summary.addEventListener('keydown', (e: KeyboardEvent) => {
+				if (e.key === ' ' || e.key === 'Enter') {
+					e.preventDefault(); // avoid scroll
+				}
+			});
+
+			summary.addEventListener('keyup', (e: KeyboardEvent) => {
+				if (e.key === ' ' || e.key === 'Enter') {
+					toggleDetails(el, summary, content, animTiming);
+				}
+			});
+
+			summary.addEventListener('click', (e) => {
+				e.preventDefault();
 				toggleDetails(el, summary, content, animTiming);
-			}
+			});
 		});
+	},
+};
 
-		summary.addEventListener('click', (e) => {
-			e.preventDefault();
-			toggleDetails(el, summary, content, animTiming);
-		});
-	});
-}
+export default details;
 
 /**
  * details 開閉処理（アニメーション含む）
@@ -41,7 +51,7 @@ function toggleDetails(
 	el: HTMLDetailsElement,
 	summary: HTMLElement,
 	content: HTMLElement,
-	animTiming: KeyframeAnimationOptions
+	animTiming: KeyframeAnimationOptions,
 ): void {
 	const isOpen = el.hasAttribute('open');
 
@@ -54,7 +64,7 @@ function toggleDetails(
 				{ height: `${startHeight}px`, opacity: 1 },
 				{ height: '0px', opacity: 0 },
 			],
-			animTiming
+			animTiming,
 		);
 
 		animation.onfinish = () => {
@@ -80,7 +90,7 @@ function toggleDetails(
 				{ height: '0px', opacity: 0 },
 				{ height: `${fullHeight}px`, opacity: 1 },
 			],
-			animTiming
+			animTiming,
 		);
 
 		animation.onfinish = () => {

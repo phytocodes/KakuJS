@@ -1,4 +1,5 @@
 import gsap from 'gsap';
+import type { KakuPlugin } from '../core/types';
 import { mqDown } from '../utils';
 
 // dataset の型を拡張しておく
@@ -7,61 +8,67 @@ interface CursorContainerDataset extends DOMStringMap {
 	cursorText?: string;
 }
 
-export default function cursorFollow(): void {
-	const ball = document.querySelector<HTMLElement>('.mouse');
-	if (!ball || mqDown('sm')) return;
+const cursorFollow: KakuPlugin = {
+	phase: 'init',
 
-	const pointer = document.querySelector<HTMLElement>('.mouse__pointer');
-	if (!pointer) return;
+	init() {
+		const ball = document.querySelector<HTMLElement>('.mouse');
+		if (!ball || mqDown('sm')) return;
 
-	const containers = document.querySelectorAll<HTMLElement>('.js-hover-cursor');
+		const pointer = document.querySelector<HTMLElement>('.mouse__pointer');
+		if (!pointer) return;
 
-	const pos = {
-		x: window.innerWidth / 2,
-		y: window.innerHeight / 2,
-	};
+		const containers = document.querySelectorAll<HTMLElement>('.js-hover-cursor');
 
-	const mouse = { ...pos };
-	const speed = 0.2;
+		const pos = {
+			x: window.innerWidth / 2,
+			y: window.innerHeight / 2,
+		};
 
-	// setter の型補正
-	const xSet = gsap.quickSetter(ball, 'x', 'px') as (v: number) => void;
-	const ySet = gsap.quickSetter(ball, 'y', 'px') as (v: number) => void;
+		const mouse = { ...pos };
+		const speed = 0.2;
 
-	gsap.set('.mouse', { xPercent: -70, yPercent: -70 });
+		// setter の型補正
+		const xSet = gsap.quickSetter(ball, 'x', 'px') as (v: number) => void;
+		const ySet = gsap.quickSetter(ball, 'y', 'px') as (v: number) => void;
 
-	// --- mouse move ---
-	window.addEventListener('mousemove', (e: MouseEvent) => {
-		mouse.x = e.clientX;
-		mouse.y = e.clientY;
-	});
+		gsap.set('.mouse', { xPercent: -70, yPercent: -70 });
 
-	// --- render loop ---
-	gsap.ticker.add(() => {
-		// adjust speed for higher refresh monitors
-		const dt = 1.0 - (1.0 - speed) ** gsap.ticker.deltaRatio();
-		pos.x += (mouse.x - pos.x) * dt;
-		pos.y += (mouse.y - pos.y) * dt;
-
-		xSet(pos.x);
-		ySet(pos.y);
-	});
-
-	// --- hover containers ---
-	containers.forEach((container) => {
-		const ds = container.dataset as CursorContainerDataset;
-
-		container.addEventListener('mouseenter', () => {
-			if (ds.src) pointer.dataset.bg = ds.src;
-			if (ds.cursorText) pointer.dataset.text = ds.cursorText;
-
-			ball.classList.add('is-hover');
+		// --- mouse move ---
+		window.addEventListener('mousemove', (e: MouseEvent) => {
+			mouse.x = e.clientX;
+			mouse.y = e.clientY;
 		});
 
-		container.addEventListener('mouseleave', () => {
-			ball.classList.remove('is-hover');
-			pointer.dataset.bg = '';
-			pointer.dataset.text = '';
+		// --- render loop ---
+		gsap.ticker.add(() => {
+			// adjust speed for higher refresh monitors
+			const dt = 1.0 - (1.0 - speed) ** gsap.ticker.deltaRatio();
+			pos.x += (mouse.x - pos.x) * dt;
+			pos.y += (mouse.y - pos.y) * dt;
+
+			xSet(pos.x);
+			ySet(pos.y);
 		});
-	});
-}
+
+		// --- hover containers ---
+		containers.forEach((container) => {
+			const ds = container.dataset as CursorContainerDataset;
+
+			container.addEventListener('mouseenter', () => {
+				if (ds.src) pointer.dataset.bg = ds.src;
+				if (ds.cursorText) pointer.dataset.text = ds.cursorText;
+
+				ball.classList.add('is-hover');
+			});
+
+			container.addEventListener('mouseleave', () => {
+				ball.classList.remove('is-hover');
+				pointer.dataset.bg = '';
+				pointer.dataset.text = '';
+			});
+		});
+	},
+};
+
+export default cursorFollow;

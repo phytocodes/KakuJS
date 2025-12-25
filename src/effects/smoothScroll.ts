@@ -1,6 +1,7 @@
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis, { type LenisOptions } from 'lenis';
+import type { KakuPlugin } from '../core/types';
 import { mqUp } from '../utils';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -10,50 +11,59 @@ interface SmoothScrollLinkDataset extends DOMStringMap {
 	spOffset?: string;
 }
 
-export default function smoothScroll(): void {
-	const DEFAULT_PC_OFFSET = -69;
-	const DEFAULT_SP_OFFSET = -50;
+const smoothScroll: KakuPlugin = {
+	phase: 'init',
 
-	const htmlElement = document.documentElement;
+	init() {
+		const DEFAULT_PC_OFFSET = -69;
+		const DEFAULT_SP_OFFSET = -50;
 
-	const lenis = new Lenis({
-		smooth: true,
-	} as LenisOptions);
+		const htmlElement = document.documentElement;
 
-	lenis.on('scroll', ScrollTrigger.update);
+		const lenis = new Lenis({
+			smooth: true,
+		} as LenisOptions);
 
-	const raf = (time: number) => {
-		lenis.raf(time);
-		ScrollTrigger.update();
+		// ScrollTrigger と Lenis を同期
+		lenis.on('scroll', ScrollTrigger.update);
+
+		const raf = (time: number) => {
+			lenis.raf(time);
+			ScrollTrigger.update();
+			requestAnimationFrame(raf);
+		};
 		requestAnimationFrame(raf);
-	};
-	requestAnimationFrame(raf);
 
-	const smoothScrollTriggers = document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]:not(.no-lenis-scroll)');
+		const smoothScrollTriggers = document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]:not(.no-lenis-scroll)');
 
-	smoothScrollTriggers.forEach((target) => {
-		const ds = target.dataset as SmoothScrollLinkDataset;
+		if (!smoothScrollTriggers.length) return;
 
-		target.addEventListener('click', (e: MouseEvent) => {
-			e.preventDefault();
+		smoothScrollTriggers.forEach((target) => {
+			const ds = target.dataset as SmoothScrollLinkDataset;
 
-			const pcOffset = ds.pcOffset ? Number(ds.pcOffset) : DEFAULT_PC_OFFSET;
-			const spOffset = ds.spOffset ? Number(ds.spOffset) : DEFAULT_SP_OFFSET;
+			target.addEventListener('click', (e: MouseEvent) => {
+				e.preventDefault();
 
-			const offset = mqUp('sm') ? pcOffset : spOffset;
+				const pcOffset = ds.pcOffset ? Number(ds.pcOffset) : DEFAULT_PC_OFFSET;
+				const spOffset = ds.spOffset ? Number(ds.spOffset) : DEFAULT_SP_OFFSET;
 
-			const href = target.getAttribute('href');
-			if (!href) return;
+				const offset = mqUp('sm') ? pcOffset : spOffset;
 
-			htmlElement.classList.add('smooth');
+				const href = target.getAttribute('href');
+				if (!href) return;
 
-			lenis.scrollTo(href, {
-				lock: true,
-				offset,
-				onComplete: () => {
-					htmlElement.classList.remove('smooth');
-				},
+				htmlElement.classList.add('smooth');
+
+				lenis.scrollTo(href, {
+					lock: true,
+					offset,
+					onComplete: () => {
+						htmlElement.classList.remove('smooth');
+					},
+				});
 			});
 		});
-	});
-}
+	},
+};
+
+export default smoothScroll;

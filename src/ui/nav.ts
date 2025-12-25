@@ -1,84 +1,103 @@
+import type { KakuPlugin } from '../core/types';
 import { debounce, mqDown } from '../utils';
 
-export default function gnavToggle(): void {
-	const body = document.body;
-	const gnav = document.querySelector<HTMLElement>('.gnav');
-	const toggles = document.querySelectorAll<HTMLButtonElement>('.js-gnav-toggle');
-	const overlay = document.getElementById('overlay');
-	const links = gnav ? gnav.querySelectorAll<HTMLAnchorElement>('a') : [];
-	const NAV_OPEN_CLASS = 'is-nav-opened';
+const NAV_OPEN_CLASS = 'is-nav-opened';
+const NAV_READY_CLASS = 'is-nav-ready';
 
-	if (!gnav) return;
+const nav: KakuPlugin = {
+	phase: 'init',
 
-	// 初期状態を設定
-	const initState = (): void => {
-		const isMobile = mqDown('xxl');
-		const isNavOpen = body.classList.contains(NAV_OPEN_CLASS);
+	init() {
+		const body = document.body;
+		const gnav = document.querySelector<HTMLElement>('.gnav');
+		const toggles = document.querySelectorAll<HTMLButtonElement>('.js-gnav-toggle');
+		const overlay = document.getElementById('overlay');
+		const links = gnav ? gnav.querySelectorAll<HTMLAnchorElement>('a') : [];
 
-		if (isMobile) {
-			gnav.setAttribute('aria-hidden', isNavOpen ? 'false' : 'true');
-			toggles.forEach((btn) => {
-				btn.setAttribute('aria-expanded', isNavOpen ? 'true' : 'false')
+		if (!gnav) return;
+
+		let lastFocusedElement: HTMLElement | null = null;
+		let isReady = false;
+
+		/* -----------------------------
+		 * 状態更新（唯一の真実）
+		 * ----------------------------- */
+		const setNavOpen = (open: boolean) => {
+			body.classList.toggle(NAV_OPEN_CLASS, open);
+
+			toggles.forEach((btn): void => {
+				btn.setAttribute('aria-expanded', open ? 'true' : 'false');
 			});
-			body.classList.remove(NAV_OPEN_CLASS);
-		} else {
-			gnav.setAttribute('aria-hidden', 'false');
-			toggles.forEach((btn) => {
-				btn.setAttribute('aria-expanded', 'false')
-			});
-			body.classList.remove(NAV_OPEN_CLASS);
-		}
-	};
 
-	let lastFocusedElement: HTMLElement | null = null;
+			gnav.setAttribute('aria-hidden', open ? 'false' : 'true');
 
-	// 開閉関数
-	const setNavState = (isOpen: boolean): void => {
-		body.classList.toggle(NAV_OPEN_CLASS, isOpen);
-
-		toggles.forEach((btn) => {
-			btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false')
-		});
-
-		if (isOpen) {
-			gnav.setAttribute('aria-hidden', 'false');
-			gnav.scrollTop = 0;
-
-			lastFocusedElement = document.activeElement as HTMLElement;
-
-			if (links.length > 0) {
-				links[0].focus();
-			}
-		} else {
-			gnav.setAttribute('aria-hidden', 'true');
-
-			if (lastFocusedElement) {
+			if (open) {
+				gnav.scrollTop = 0;
+				lastFocusedElement = document.activeElement as HTMLElement;
+				links[0]?.focus();
+			} else if (lastFocusedElement) {
 				lastFocusedElement.focus();
 				lastFocusedElement = null;
 			}
-		}
-	};
+		};
 
-	toggles.forEach((btn) => {
-		btn.addEventListener('click', (e: Event) => {
-			e.preventDefault();
-			const isOpen = !body.classList.contains(NAV_OPEN_CLASS);
-			setNavState(isOpen);
+		/* -----------------------------
+		 * 初期化（表示はしない）
+		 * ----------------------------- */
+		const syncByViewport = () => {
+			const isMobile = mqDown('xxl');
+
+			if (isMobile) {
+				setNavOpen(false);
+			} else {
+				// PCでは JS は開閉しない
+				gnav.setAttribute('aria-hidden', 'false');
+				toggles.forEach((btn): void => {
+					btn.setAttribute('aria-expanded', 'false');
+				});
+				body.classList.remove(NAV_OPEN_CLASS);
+			}
+		};
+
+		/* -----------------------------
+		 * トグル
+		 * ----------------------------- */
+		toggles.forEach((btn) => {
+			btn.addEventListener('click', (e) => {
+				e.preventDefault();
+				setNavOpen(!body.classList.contains(NAV_OPEN_CLASS));
+			});
 		});
-	});
 
-	document.addEventListener('keydown', (e: KeyboardEvent) => {
-		if (body.classList.contains(NAV_OPEN_CLASS) && e.key === 'Escape') {
-			e.preventDefault();
-			setNavState(false);
-		}
-	});
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape') setNavOpen(false);
+		});
 
-	links.forEach((link) => {
-		link.addEventListener('click', () => setNavState(false))
-	});
-	if (overlay) overlay.addEventListener('click', () => setNavState(false));
+		links.forEach((link) => {
+			link.addEventListener('click', () => setNavOpen(false));
+		});
 
-	window.addEventListener('resize', debounce(initState, 200));
-	window.addEventListener('load', () => initState());
-}
+		overlay?.addEventListener('click', () => setNavOpen(false));
+
+		/* -----------------------------
+		 * hover 初回ロード制御（重要）
+		 * ----------------------------- */
+		const navItems = document.querySelectorAll('.gnav__item-link');
+		navItems.forEach((item): void => {
+			item.addEventListener(
+				'mouseover',
+				(): void => {
+					if (isReady) return;
+					body.classList.add(NAV_READY_CLASS);
+					isReady = true;
+				},
+				{ once: true },
+			);
+		});
+
+		window.addEventListener('resize', debounce(syncByViewport, 200));
+		window.addEventListener('load', syncByViewport);
+	},
+};
+
+export default nav;
