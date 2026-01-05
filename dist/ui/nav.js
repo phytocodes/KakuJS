@@ -11,7 +11,6 @@ const nav = {
     const links = gnav ? gnav.querySelectorAll("a") : [];
     if (!gnav) return;
     let lastFocusedElement = null;
-    let isReady = false;
     const setNavOpen = (open) => {
       body.classList.toggle(NAV_OPEN_CLASS, open);
       toggles.forEach((btn) => {
@@ -52,18 +51,15 @@ const nav = {
       link.addEventListener("click", () => setNavOpen(false));
     });
     overlay?.addEventListener("click", () => setNavOpen(false));
-    const navItems = document.querySelectorAll(".gnav__item-link");
-    navItems.forEach((item) => {
-      item.addEventListener(
-        "mouseover",
-        () => {
-          if (isReady) return;
+    gnav.addEventListener(
+      "mouseover",
+      (e) => {
+        if (e.target.closest(".gnav__item-link")) {
           body.classList.add(NAV_READY_CLASS);
-          isReady = true;
-        },
-        { once: true }
-      );
-    });
+        }
+      },
+      { once: true }
+    );
     window.addEventListener("resize", debounce(syncByViewport, 200));
     window.addEventListener("load", syncByViewport);
   }

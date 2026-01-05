@@ -17,10 +17,9 @@ const nav: KakuPlugin = {
 		if (!gnav) return;
 
 		let lastFocusedElement: HTMLElement | null = null;
-		let isReady = false;
 
 		/* -----------------------------
-		 * 状態更新（唯一の真実）
+		 * 状態更新
 		 * ----------------------------- */
 		const setNavOpen = (open: boolean) => {
 			body.classList.toggle(NAV_OPEN_CLASS, open);
@@ -42,7 +41,7 @@ const nav: KakuPlugin = {
 		};
 
 		/* -----------------------------
-		 * 初期化（表示はしない）
+		 * 初期化
 		 * ----------------------------- */
 		const syncByViewport = () => {
 			const isMobile = mqDown('xxl');
@@ -80,20 +79,18 @@ const nav: KakuPlugin = {
 		overlay?.addEventListener('click', () => setNavOpen(false));
 
 		/* -----------------------------
-		 * hover 初回ロード制御（重要）
+		 * hover 初回ロード制御
 		 * ----------------------------- */
-		const navItems = document.querySelectorAll('.gnav__item-link');
-		navItems.forEach((item): void => {
-			item.addEventListener(
-				'mouseover',
-				(): void => {
-					if (isReady) return;
+		gnav.addEventListener(
+			'mouseover',
+			(e) => {
+				// aタグ（またはその子要素）にホバーしたかチェック
+				if ((e.target as HTMLElement).closest('.gnav__item-link')) {
 					body.classList.add(NAV_READY_CLASS);
-					isReady = true;
-				},
-				{ once: true },
-			);
-		});
+				}
+			},
+			{ once: true }
+		);
 
 		window.addEventListener('resize', debounce(syncByViewport, 200));
 		window.addEventListener('load', syncByViewport);
