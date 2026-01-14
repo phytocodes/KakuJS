@@ -10,47 +10,66 @@ const nav = {
     const overlay = document.getElementById("overlay");
     const links = gnav ? gnav.querySelectorAll("a") : [];
     if (!gnav) return;
+    let mode = null;
+    let isOpen = false;
     let lastFocusedElement = null;
-    const setNavOpen = (open) => {
-      body.classList.toggle(NAV_OPEN_CLASS, open);
+    const detectMode = () => mqDown("xxl") ? "mobile" : "desktop";
+    const openNav = () => {
+      if (mode !== "mobile" || isOpen) return;
+      isOpen = true;
+      body.classList.add(NAV_OPEN_CLASS);
       toggles.forEach((btn) => {
-        btn.setAttribute("aria-expanded", open ? "true" : "false");
+        btn.setAttribute("aria-expanded", "true");
       });
-      gnav.setAttribute("aria-hidden", open ? "false" : "true");
-      if (open) {
-        gnav.scrollTop = 0;
-        lastFocusedElement = document.activeElement;
-        links[0]?.focus();
-      } else if (lastFocusedElement) {
+      lastFocusedElement = document.activeElement;
+      gnav.removeAttribute("inert");
+      gnav.scrollTop = 0;
+      links[0]?.focus();
+    };
+    const closeNav = () => {
+      if (mode !== "mobile" || !isOpen) return;
+      isOpen = false;
+      body.classList.remove(NAV_OPEN_CLASS);
+      toggles.forEach((btn) => {
+        btn.setAttribute("aria-expanded", "false");
+      });
+      gnav.setAttribute("inert", "");
+      if (lastFocusedElement) {
         lastFocusedElement.focus();
         lastFocusedElement = null;
       }
     };
-    const syncByViewport = () => {
-      const isMobile = mqDown("xxl");
-      if (isMobile) {
-        setNavOpen(false);
-      } else {
-        gnav.setAttribute("aria-hidden", "false");
+    const applyMode = (nextMode) => {
+      if (mode === nextMode) return;
+      mode = nextMode;
+      if (mode === "desktop") {
+        isOpen = false;
+        body.classList.remove(NAV_OPEN_CLASS);
+        gnav.removeAttribute("inert");
         toggles.forEach((btn) => {
           btn.setAttribute("aria-expanded", "false");
         });
+      } else {
+        isOpen = false;
         body.classList.remove(NAV_OPEN_CLASS);
+        gnav.setAttribute("inert", "");
       }
     };
+    applyMode(detectMode());
     toggles.forEach((btn) => {
       btn.addEventListener("click", (e) => {
         e.preventDefault();
-        setNavOpen(!body.classList.contains(NAV_OPEN_CLASS));
+        if (mode !== "mobile") return;
+        isOpen ? closeNav() : openNav();
       });
     });
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") setNavOpen(false);
+      if (e.key === "Escape") closeNav();
     });
     links.forEach((link) => {
-      link.addEventListener("click", () => setNavOpen(false));
+      link.addEventListener("click", closeNav);
     });
-    overlay?.addEventListener("click", () => setNavOpen(false));
+    overlay?.addEventListener("click", closeNav);
     gnav.addEventListener(
       "mouseover",
       (e) => {
@@ -60,8 +79,12 @@ const nav = {
       },
       { once: true }
     );
-    window.addEventListener("resize", debounce(syncByViewport, 200));
-    window.addEventListener("load", syncByViewport);
+    window.addEventListener(
+      "resize",
+      debounce(() => {
+        applyMode(detectMode());
+      }, 200)
+    );
   }
 };
 var nav_default = nav;
