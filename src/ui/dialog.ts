@@ -13,7 +13,43 @@ const dialog: KakuPlugin = {
 
 		if (dialogs.length === 0) return;
 
-		// --- ID => dialog キャッシュ ---
+		/* --------------------------------
+		 * CustomEvent dispatcher
+		 * -------------------------------- */
+		const dispatchDialogEvent = (
+			dialog: HTMLDialogElement,
+			name: 'dialog:open' | 'dialog:close:start' | 'dialog:close:end',
+		) => {
+			dialog.dispatchEvent(
+				new CustomEvent(name, {
+					bubbles: true,
+					detail: { dialog },
+				}),
+			);
+		};
+
+		/* --------------------------------
+		 * Scroll reset helper
+		 * -------------------------------- */
+		const resetDialogScroll = (dialog: HTMLElement) => {
+			// 明示指定があれば最優先
+			const targets = dialog.querySelectorAll<HTMLElement>('[data-dialog-scroll]');
+
+			if (targets.length > 0) {
+				targets.forEach((el) => {
+					el.scrollTop = 0;
+				});
+				return;
+			}
+
+			// フォールバック（従来挙動）
+			const overlay = dialog.querySelector<HTMLElement>('.dialog__overlay');
+			if (overlay) overlay.scrollTop = 0;
+		};
+
+		/* --------------------------------
+		 * ID => dialog キャッシュ
+		 * -------------------------------- */
 		const dialogMap = new Map<string, DialogWithLastFocus>();
 		dialogs.forEach((d) => {
 			dialogMap.set(d.id, d);
@@ -21,11 +57,14 @@ const dialog: KakuPlugin = {
 
 		const isHashControlEnabled = (dialog: DialogWithLastFocus) => dialog.dataset.hashControl === 'true';
 
-		// --- 閉じるアニメーション ---
+		/* --------------------------------
+		 * 閉じる（アニメーション付き）
+		 * -------------------------------- */
 		const closeDialogAnimated = (dialog: DialogWithLastFocus) => {
 			if (!dialog.open || dialog.classList.contains('is-closing')) return;
 
-			// ハッシュ制御リセット
+			dispatchDialogEvent(dialog, 'dialog:close:start');
+
 			if (isHashControlEnabled(dialog) && window.location.hash === `#${dialog.id}`) {
 				history.replaceState('', document.title, window.location.pathname + window.location.search);
 			}
@@ -42,7 +81,6 @@ const dialog: KakuPlugin = {
 
 			dialog.addEventListener('transitionend', onTransitionEnd);
 
-			// フォールバック
 			const duration = parseFloat(getComputedStyle(dialog).transitionDuration) * 1000 || 400;
 
 			setTimeout(() => {
@@ -54,13 +92,16 @@ const dialog: KakuPlugin = {
 			}, duration + 50);
 		};
 
-		// --- 開くボタン設定 ---
+		/* --------------------------------
+		 * 開くボタン
+		 * -------------------------------- */
 		openButtons.forEach((button) => {
 			button.setAttribute('aria-expanded', 'false');
 			button.setAttribute('aria-haspopup', 'dialog');
 
-			button.addEventListener('click', (e: MouseEvent) => {
+			button.addEventListener('click', (e) => {
 				e.preventDefault();
+
 				const targetId = button.dataset.dialogTarget;
 				if (!targetId) return;
 
@@ -68,17 +109,18 @@ const dialog: KakuPlugin = {
 				if (!targetDialog) return;
 
 				targetDialog._lastFocus = button;
-
 				targetDialog.classList.remove('is-closing');
+
 				if (!targetDialog.open) targetDialog.showModal();
 
-				requestAnimationFrame(() => targetDialog.classList.add('is-open'));
+				requestAnimationFrame(() => {
+					targetDialog.classList.add('is-open');
+					resetDialogScroll(targetDialog);
+					dispatchDialogEvent(targetDialog, 'dialog:open');
+				});
 
 				button.setAttribute('aria-expanded', 'true');
 				document.body.style.overflow = 'hidden';
-
-				const container = targetDialog.querySelector<HTMLElement>('.dialog__overlay');
-				if (container) container.scrollTop = 0;
 
 				if (isHashControlEnabled(targetDialog)) {
 					window.location.hash = targetId;
@@ -86,7 +128,9 @@ const dialog: KakuPlugin = {
 			});
 		});
 
-		// --- ダイアログ閉じる処理 ---
+		/* --------------------------------
+		 * dialog 閉じ処理
+		 * -------------------------------- */
 		dialogs.forEach((dialog) => {
 			const inner = dialog.querySelector<HTMLElement>('.dialog__inner');
 
@@ -94,19 +138,21 @@ const dialog: KakuPlugin = {
 				button.addEventListener('click', () => closeDialogAnimated(dialog));
 			});
 
-			dialog.addEventListener('click', (e: MouseEvent) => {
+			dialog.addEventListener('click', (e) => {
 				if (inner && !inner.contains(e.target as Node)) {
 					closeDialogAnimated(dialog);
 				}
 			});
 
-			dialog.addEventListener('cancel', (e: Event) => {
+			dialog.addEventListener('cancel', (e) => {
 				e.preventDefault();
 				closeDialogAnimated(dialog);
 			});
 
 			dialog.addEventListener('close', () => {
 				document.body.style.overflow = '';
+
+				dispatchDialogEvent(dialog, 'dialog:close:end');
 
 				const opener = dialog._lastFocus;
 				if (opener) {
@@ -118,7 +164,9 @@ const dialog: KakuPlugin = {
 			});
 		});
 
-		// --- ハッシュ制御 ---
+		/* --------------------------------
+		 * ハッシュ制御
+		 * -------------------------------- */
 		const shouldEnableHashControl = Array.from(dialogs).some(isHashControlEnabled);
 
 		if (shouldEnableHashControl) {
@@ -134,13 +182,15 @@ const dialog: KakuPlugin = {
 
 					if (dialog.id === hash) {
 						if (!dialog.open) dialog.showModal();
-						requestAnimationFrame(() => dialog.classList.add('is-open'));
+
+						requestAnimationFrame(() => {
+							dialog.classList.add('is-open');
+							resetDialogScroll(dialog);
+							dispatchDialogEvent(dialog, 'dialog:open');
+						});
 
 						if (opener) opener.setAttribute('aria-expanded', 'true');
 						dialog._lastFocus = null;
-
-						const container = dialog.querySelector<HTMLElement>('.dialog__overlay');
-						if (container) container.scrollTop = 0;
 
 						document.body.style.overflow = 'hidden';
 					} else if (dialog.open && dialog.id !== hash) {

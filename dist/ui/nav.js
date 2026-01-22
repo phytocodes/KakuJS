@@ -39,6 +39,30 @@ const nav = {
         lastFocusedElement = null;
       }
     };
+    const isHoveringGnav = () => {
+      return window.matchMedia("(hover: hover)").matches && gnav.matches(":hover");
+    };
+    let hoverReady = false;
+    let hoverListenerAttached = false;
+    const setupHoverReady = () => {
+      if (hoverReady || hoverListenerAttached) return;
+      if (mode !== "desktop") return;
+      if (isHoveringGnav()) {
+        body.classList.add(NAV_READY_CLASS);
+        hoverReady = true;
+        return;
+      }
+      hoverListenerAttached = true;
+      gnav.addEventListener(
+        "pointerenter",
+        () => {
+          if (mode !== "desktop") return;
+          body.classList.add(NAV_READY_CLASS);
+          hoverReady = true;
+        },
+        { once: true }
+      );
+    };
     const applyMode = (nextMode) => {
       if (mode === nextMode) return;
       mode = nextMode;
@@ -49,10 +73,14 @@ const nav = {
         toggles.forEach((btn) => {
           btn.setAttribute("aria-expanded", "false");
         });
+        setupHoverReady();
       } else {
         isOpen = false;
         body.classList.remove(NAV_OPEN_CLASS);
         gnav.setAttribute("inert", "");
+        body.classList.remove(NAV_READY_CLASS);
+        hoverReady = false;
+        hoverListenerAttached = false;
       }
     };
     applyMode(detectMode());
@@ -70,15 +98,6 @@ const nav = {
       link.addEventListener("click", closeNav);
     });
     overlay?.addEventListener("click", closeNav);
-    gnav.addEventListener(
-      "mouseover",
-      (e) => {
-        if (e.target.closest(".gnav__item-link")) {
-          body.classList.add(NAV_READY_CLASS);
-        }
-      },
-      { once: true }
-    );
     window.addEventListener(
       "resize",
       debounce(() => {

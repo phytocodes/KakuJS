@@ -65,6 +65,39 @@ const nav: KakuPlugin = {
 		};
 
 		/* --------------------------------
+		 * hover 初回ロード制御
+		 * -------------------------------- */
+		const isHoveringGnav = () => {
+			return window.matchMedia('(hover: hover)').matches && gnav.matches(':hover');
+		};
+
+		let hoverReady = false;
+		let hoverListenerAttached = false;
+
+		const setupHoverReady = () => {
+			if (hoverReady || hoverListenerAttached) return;
+			if (mode !== 'desktop') return;
+
+			// 初期ロード時点ですでに hover している場合
+			if (isHoveringGnav()) {
+				body.classList.add(NAV_READY_CLASS);
+				hoverReady = true;
+				return;
+			}
+
+			hoverListenerAttached = true;
+			gnav.addEventListener(
+				'pointerenter',
+				() => {
+					if (mode !== 'desktop') return;
+					body.classList.add(NAV_READY_CLASS);
+					hoverReady = true;
+				},
+				{ once: true },
+			);
+		};
+
+		/* --------------------------------
 		 * mode 適用（副作用ここだけ）
 		 * -------------------------------- */
 		const applyMode = (nextMode: NavMode) => {
@@ -72,7 +105,6 @@ const nav: KakuPlugin = {
 			mode = nextMode;
 
 			if (mode === 'desktop') {
-				// desktop は常時有効・JS開閉なし
 				isOpen = false;
 				body.classList.remove(NAV_OPEN_CLASS);
 				gnav.removeAttribute('inert');
@@ -80,11 +112,16 @@ const nav: KakuPlugin = {
 				toggles.forEach((btn) => {
 					btn.setAttribute('aria-expanded', 'false');
 				});
+
+				setupHoverReady();
 			} else {
-				// mobile 初期状態は closed
 				isOpen = false;
 				body.classList.remove(NAV_OPEN_CLASS);
 				gnav.setAttribute('inert', '');
+
+				body.classList.remove(NAV_READY_CLASS);
+				hoverReady = false;
+				hoverListenerAttached = false;
 			}
 		};
 
@@ -113,19 +150,6 @@ const nav: KakuPlugin = {
 		});
 
 		overlay?.addEventListener('click', closeNav);
-
-		/* --------------------------------
-		 * hover 初回ロード制御
-		 * -------------------------------- */
-		gnav.addEventListener(
-			'mouseover',
-			(e) => {
-				if ((e.target as HTMLElement).closest('.gnav__item-link')) {
-					body.classList.add(NAV_READY_CLASS);
-				}
-			},
-			{ once: true },
-		);
 
 		/* --------------------------------
 		 * resize（mode のみ更新）
