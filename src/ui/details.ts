@@ -72,6 +72,10 @@ function toggleDetails(
 			summary.setAttribute('aria-expanded', 'false');
 			content.style.height = '';
 			content.style.opacity = '';
+
+			// イベント発行
+			el.dispatchEvent(new CustomEvent('details:close', { bubbles: true }));
+			el.dispatchEvent(new CustomEvent('details:toggle', { bubbles: true, detail: { open: false } }));
 		};
 
 		return;
@@ -96,6 +100,10 @@ function toggleDetails(
 		animation.onfinish = () => {
 			content.style.height = 'auto';
 			content.style.opacity = '';
+
+			// イベント発行
+			el.dispatchEvent(new CustomEvent('details:open', { bubbles: true }));
+			el.dispatchEvent(new CustomEvent('details:toggle', { bubbles: true, detail: { open: true } }));
 		};
 	});
 }

@@ -47,6 +47,8 @@ function toggleDetails(el, summary, content, animTiming) {
       summary.setAttribute("aria-expanded", "false");
       content.style.height = "";
       content.style.opacity = "";
+      el.dispatchEvent(new CustomEvent("details:close", { bubbles: true }));
+      el.dispatchEvent(new CustomEvent("details:toggle", { bubbles: true, detail: { open: false } }));
     };
     return;
   }
@@ -64,6 +66,8 @@ function toggleDetails(el, summary, content, animTiming) {
     animation.onfinish = () => {
       content.style.height = "auto";
       content.style.opacity = "";
+      el.dispatchEvent(new CustomEvent("details:open", { bubbles: true }));
+      el.dispatchEvent(new CustomEvent("details:toggle", { bubbles: true, detail: { open: true } }));
     };
   });
 }

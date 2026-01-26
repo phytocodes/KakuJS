@@ -12,20 +12,23 @@ const invert: KakuPlugin = {
 		if (!invertTarget) return;
 
 		const toggleElements = gsap.utils.toArray<HTMLElement>('.js-invert-toggle');
-		const invertCenter = invertTarget.offsetHeight / 2;
 
 		toggleElements.forEach((el) => {
 			gsap.context(() => {
 				ScrollTrigger.create({
 					trigger: el,
-					start: `top ${invertCenter}`,
-					end: `bottom ${invertCenter}`,
+					start: () => `top ${invertTarget.offsetHeight / 2}`,
+					end: () => `bottom ${invertTarget.offsetHeight / 2}`,
 					toggleClass: {
 						targets: invertTarget,
 						className: 'is-invert',
 					},
 				});
 			}, el);
+		});
+
+		window.addEventListener('details:toggle', () => {
+			ScrollTrigger.refresh();
 		});
 	},
 };
