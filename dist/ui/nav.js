@@ -15,28 +15,32 @@ const nav = {
     let lastFocusedElement = null;
     const detectMode = () => mqDown("xxl") ? "mobile" : "desktop";
     const openNav = () => {
-      if (mode !== "mobile" || isOpen) return;
+      if (isOpen) return;
       isOpen = true;
       body.classList.add(NAV_OPEN_CLASS);
       toggles.forEach((btn) => {
         btn.setAttribute("aria-expanded", "true");
       });
       lastFocusedElement = document.activeElement;
-      gnav.removeAttribute("inert");
-      gnav.scrollTop = 0;
-      links[0]?.focus();
+      if (mode === "mobile") {
+        gnav.removeAttribute("inert");
+        gnav.scrollTop = 0;
+        links[0]?.focus();
+      }
     };
     const closeNav = () => {
-      if (mode !== "mobile" || !isOpen) return;
+      if (!isOpen) return;
       isOpen = false;
       body.classList.remove(NAV_OPEN_CLASS);
       toggles.forEach((btn) => {
         btn.setAttribute("aria-expanded", "false");
       });
-      gnav.setAttribute("inert", "");
-      if (lastFocusedElement) {
-        lastFocusedElement.focus();
-        lastFocusedElement = null;
+      if (mode === "mobile") {
+        gnav.setAttribute("inert", "");
+        if (lastFocusedElement) {
+          lastFocusedElement.focus();
+          lastFocusedElement = null;
+        }
       }
     };
     const isHoveringGnav = () => {
@@ -87,8 +91,11 @@ const nav = {
     toggles.forEach((btn) => {
       btn.addEventListener("click", (e) => {
         e.preventDefault();
-        if (mode !== "mobile") return;
-        isOpen ? closeNav() : openNav();
+        if (isOpen) {
+          closeNav();
+        } else {
+          openNav();
+        }
       });
     });
     document.addEventListener("keydown", (e) => {

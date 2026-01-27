@@ -31,7 +31,7 @@ const nav: KakuPlugin = {
 		 * mobile open / close
 		 * -------------------------------- */
 		const openNav = () => {
-			if (mode !== 'mobile' || isOpen) return;
+			if (isOpen) return;
 
 			isOpen = true;
 			body.classList.add(NAV_OPEN_CLASS);
@@ -41,13 +41,17 @@ const nav: KakuPlugin = {
 			});
 
 			lastFocusedElement = document.activeElement as HTMLElement;
-			gnav.removeAttribute('inert');
-			gnav.scrollTop = 0;
-			links[0]?.focus();
+
+			// mobile 以外は inert 操作をスキップ
+			if (mode === 'mobile') {
+				gnav.removeAttribute('inert');
+				gnav.scrollTop = 0;
+				links[0]?.focus();
+			}
 		};
 
 		const closeNav = () => {
-			if (mode !== 'mobile' || !isOpen) return;
+			if (!isOpen) return;
 
 			isOpen = false;
 			body.classList.remove(NAV_OPEN_CLASS);
@@ -56,11 +60,12 @@ const nav: KakuPlugin = {
 				btn.setAttribute('aria-expanded', 'false');
 			});
 
-			gnav.setAttribute('inert', '');
-
-			if (lastFocusedElement) {
-				lastFocusedElement.focus();
-				lastFocusedElement = null;
+			if (mode === 'mobile') {
+				gnav.setAttribute('inert', '');
+				if (lastFocusedElement) {
+					lastFocusedElement.focus();
+					lastFocusedElement = null;
+				}
 			}
 		};
 
@@ -136,8 +141,11 @@ const nav: KakuPlugin = {
 		toggles.forEach((btn) => {
 			btn.addEventListener('click', (e) => {
 				e.preventDefault();
-				if (mode !== 'mobile') return;
-				isOpen ? closeNav() : openNav();
+				if (isOpen) {
+					closeNav();
+				} else {
+					openNav();
+				}
 			});
 		});
 
