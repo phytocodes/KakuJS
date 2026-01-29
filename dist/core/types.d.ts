@@ -3,5 +3,9 @@ interface KakuPlugin {
     phase?: PluginPhase;
     init: () => void | Promise<void>;
 }
+type ModuleExports = {
+    default?: () => void | Promise<void>;
+    init?: () => void | Promise<void>;
+};
 
-export type { KakuPlugin, PluginPhase };
+export type { KakuPlugin, ModuleExports, PluginPhase };

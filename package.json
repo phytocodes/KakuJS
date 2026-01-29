@@ -1,5 +1,5 @@
 {
-	"name": "@phytocodes/KakuJS",
+	"name": "@phytocodes/kakujs",
 	"version": "0.0.1",
 	"author": {
 		"name": "phytocodes",
@@ -10,12 +10,34 @@
 	"main": "src/index.js",
 	"types": "dist/index.d.ts",
 	"exports": {
-		".": "./dist/index.js",
-		"./ui": "./dist/ui/index.js",
-		"./effects": "./dist/effects/index.js",
-		"./utils": "./dist/utils/index.js",
-		"./core/runner": "./dist/core/runner.js",
-		"./core/types": "./dist/core/types.js"
+		".": {
+			"import": "./dist/index.js",
+			"types": "./dist/index.d.ts"
+		},
+		"./ui": {
+			"import": "./dist/ui/index.js",
+			"types": "./dist/ui/index.d.ts"
+		},
+		"./effects": {
+			"import": "./dist/effects/index.js",
+			"types": "./dist/effects/index.d.ts"
+		},
+		"./utils": {
+			"import": "./dist/utils/index.js",
+			"types": "./dist/utils/index.d.ts"
+		},
+		"./core/runner": {
+			"import": "./dist/core/runner.js",
+			"types": "./dist/core/runner.d.ts"
+		},
+		"./core/types": {
+			"import": "./dist/core/types.js",
+			"types": "./dist/core/types.d.ts"
+		},
+		"./adapters/vite-runtime": {
+			"import": "./dist/adapters/vite-runtime.js",
+			"types": "./dist/adapters/vite-runtime.d.ts"
+		}
 	},
 	"scripts": {
 		"build": "tsup"
