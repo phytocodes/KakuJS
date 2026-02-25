@@ -117,6 +117,7 @@ const dialog: KakuPlugin = {
 					targetDialog.classList.add('is-open');
 					resetDialogScroll(targetDialog);
 					dispatchDialogEvent(targetDialog, 'dialog:open');
+					updateNavButtons(targetDialog);
 				});
 
 				button.setAttribute('aria-expanded', 'true');
@@ -187,6 +188,7 @@ const dialog: KakuPlugin = {
 							dialog.classList.add('is-open');
 							resetDialogScroll(dialog);
 							dispatchDialogEvent(dialog, 'dialog:open');
+							updateNavButtons(dialog);
 						});
 
 						if (opener) opener.setAttribute('aria-expanded', 'true');
@@ -203,6 +205,109 @@ const dialog: KakuPlugin = {
 			window.addEventListener('load', handleHashChange);
 			window.addEventListener('hashchange', handleHashChange);
 		}
+
+		/* --------------------------------
+		 * 前後ボタンの制御
+		 * -------------------------------- */
+		const updateNavButtons = (currentDialog: DialogWithLastFocus) => {
+			const group = currentDialog.dataset.dialogGroup;
+			if (!group) return;
+
+			const isLoopEnabled = currentDialog.dataset.dialogLoop !== 'false';
+
+			// ループ有効なら常にどちらも押せるので何もしない
+			if (isLoopEnabled) return;
+
+			const groupSelector = group ? `dialog.dialog[data-dialog-group="${group}"]` : 'dialog.dialog';
+			const groupDialogs = Array.from(document.querySelectorAll<DialogWithLastFocus>(groupSelector));
+			const currentIndex = groupDialogs.indexOf(currentDialog);
+
+			const prevBtns = currentDialog.querySelectorAll<HTMLButtonElement>('.js-dialog-prev');
+			const nextBtns = currentDialog.querySelectorAll<HTMLButtonElement>('.js-dialog-next');
+
+			prevBtns.forEach((btn) => {
+				btn.disabled = currentIndex === 0;
+			});
+
+			nextBtns.forEach((btn) => {
+				btn.disabled = currentIndex === groupDialogs.length - 1;
+			});
+		};
+
+		const switchDialog = (currentDialog: DialogWithLastFocus, direction: 'prev' | 'next') => {
+			const group = currentDialog.dataset.dialogGroup;
+			if (!group) return;
+
+			const isLoopEnabled = currentDialog.dataset.dialogLoop !== 'false';
+
+			const groupSelector = group ? `dialog.dialog[data-dialog-group="${group}"]` : 'dialog.dialog';
+			const groupDialogs = Array.from(document.querySelectorAll<DialogWithLastFocus>(groupSelector));
+
+			if (groupDialogs.length <= 1) return;
+
+			const currentIndex = groupDialogs.indexOf(currentDialog);
+			let targetIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
+
+			// ループ処理の分岐
+			if (targetIndex >= groupDialogs.length) {
+				if (!isLoopEnabled) return; // ループしないならここで終了
+				targetIndex = 0;
+			}
+			if (targetIndex < 0) {
+				if (!isLoopEnabled) return; // ループしないならここで終了
+				targetIndex = groupDialogs.length - 1;
+			}
+
+			const targetDialog = groupDialogs[targetIndex];
+
+			currentDialog.classList.remove('is-open');
+			currentDialog.close();
+
+			targetDialog._lastFocus = currentDialog._lastFocus;
+			targetDialog.showModal();
+
+			requestAnimationFrame(() => {
+				targetDialog.classList.add('is-open');
+				resetDialogScroll(targetDialog);
+				dispatchDialogEvent(targetDialog, 'dialog:open');
+
+				updateNavButtons(targetDialog);
+
+				if (isHashControlEnabled(targetDialog)) {
+					history.replaceState(null, '', `#${targetDialog.id}`);
+				}
+			});
+		};
+
+		// 各ダイアログ内のボタンにイベント登録
+		dialogs.forEach((dialog) => {
+			// 「前へ」ボタン
+			dialog.querySelectorAll<HTMLButtonElement>('.js-dialog-prev').forEach((btn) => {
+				btn.addEventListener('click', () => switchDialog(dialog, 'prev'));
+			});
+
+			// 「次へ」ボタン
+			dialog.querySelectorAll<HTMLButtonElement>('.js-dialog-next').forEach((btn) => {
+				btn.addEventListener('click', () => switchDialog(dialog, 'next'));
+			});
+
+			// キーボード操作の追加
+			dialog.addEventListener('keydown', (e: KeyboardEvent) => {
+				// inputやtextarea入力中は反応させないガード
+				const target = e.target as HTMLElement;
+				if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+					return;
+				}
+
+				if (e.key === 'ArrowRight') {
+					e.preventDefault(); // スクロールの誤動作防止
+					switchDialog(dialog, 'next');
+				} else if (e.key === 'ArrowLeft') {
+					e.preventDefault();
+					switchDialog(dialog, 'prev');
+				}
+			});
+		});
 	},
 };
 

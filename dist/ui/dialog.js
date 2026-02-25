@@ -68,6 +68,7 @@ const dialog = {
           targetDialog.classList.add("is-open");
           resetDialogScroll(targetDialog);
           dispatchDialogEvent(targetDialog, "dialog:open");
+          updateNavButtons(targetDialog);
         });
         button.setAttribute("aria-expanded", "true");
         document.body.style.overflow = "hidden";
@@ -116,6 +117,7 @@ const dialog = {
               dialog2.classList.add("is-open");
               resetDialogScroll(dialog2);
               dispatchDialogEvent(dialog2, "dialog:open");
+              updateNavButtons(dialog2);
             });
             if (opener) opener.setAttribute("aria-expanded", "true");
             dialog2._lastFocus = null;
@@ -129,6 +131,76 @@ const dialog = {
       window.addEventListener("load", handleHashChange);
       window.addEventListener("hashchange", handleHashChange);
     }
+    const updateNavButtons = (currentDialog) => {
+      const group = currentDialog.dataset.dialogGroup;
+      if (!group) return;
+      const isLoopEnabled = currentDialog.dataset.dialogLoop !== "false";
+      if (isLoopEnabled) return;
+      const groupSelector = group ? `dialog.dialog[data-dialog-group="${group}"]` : "dialog.dialog";
+      const groupDialogs = Array.from(document.querySelectorAll(groupSelector));
+      const currentIndex = groupDialogs.indexOf(currentDialog);
+      const prevBtns = currentDialog.querySelectorAll(".js-dialog-prev");
+      const nextBtns = currentDialog.querySelectorAll(".js-dialog-next");
+      prevBtns.forEach((btn) => {
+        btn.disabled = currentIndex === 0;
+      });
+      nextBtns.forEach((btn) => {
+        btn.disabled = currentIndex === groupDialogs.length - 1;
+      });
+    };
+    const switchDialog = (currentDialog, direction) => {
+      const group = currentDialog.dataset.dialogGroup;
+      if (!group) return;
+      const isLoopEnabled = currentDialog.dataset.dialogLoop !== "false";
+      const groupSelector = group ? `dialog.dialog[data-dialog-group="${group}"]` : "dialog.dialog";
+      const groupDialogs = Array.from(document.querySelectorAll(groupSelector));
+      if (groupDialogs.length <= 1) return;
+      const currentIndex = groupDialogs.indexOf(currentDialog);
+      let targetIndex = direction === "next" ? currentIndex + 1 : currentIndex - 1;
+      if (targetIndex >= groupDialogs.length) {
+        if (!isLoopEnabled) return;
+        targetIndex = 0;
+      }
+      if (targetIndex < 0) {
+        if (!isLoopEnabled) return;
+        targetIndex = groupDialogs.length - 1;
+      }
+      const targetDialog = groupDialogs[targetIndex];
+      currentDialog.classList.remove("is-open");
+      currentDialog.close();
+      targetDialog._lastFocus = currentDialog._lastFocus;
+      targetDialog.showModal();
+      requestAnimationFrame(() => {
+        targetDialog.classList.add("is-open");
+        resetDialogScroll(targetDialog);
+        dispatchDialogEvent(targetDialog, "dialog:open");
+        updateNavButtons(targetDialog);
+        if (isHashControlEnabled(targetDialog)) {
+          history.replaceState(null, "", `#${targetDialog.id}`);
+        }
+      });
+    };
+    dialogs.forEach((dialog2) => {
+      dialog2.querySelectorAll(".js-dialog-prev").forEach((btn) => {
+        btn.addEventListener("click", () => switchDialog(dialog2, "prev"));
+      });
+      dialog2.querySelectorAll(".js-dialog-next").forEach((btn) => {
+        btn.addEventListener("click", () => switchDialog(dialog2, "next"));
+      });
+      dialog2.addEventListener("keydown", (e) => {
+        const target = e.target;
+        if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) {
+          return;
+        }
+        if (e.key === "ArrowRight") {
+          e.preventDefault();
+          switchDialog(dialog2, "next");
+        } else if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          switchDialog(dialog2, "prev");
+        }
+      });
+    });
   }
 };
 var dialog_default = dialog;
