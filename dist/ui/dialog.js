@@ -28,6 +28,14 @@ const dialog = {
       dialogMap.set(d.id, d);
     });
     const isHashControlEnabled = (dialog2) => dialog2.dataset.hashControl === "true";
+    const isModalMode = (dialog2) => dialog2.dataset.dialogMode !== "modeless";
+    const openDialogByMode = (dialog2) => {
+      if (isModalMode(dialog2)) {
+        dialog2.showModal();
+      } else {
+        dialog2.show();
+      }
+    };
     const closeDialogAnimated = (dialog2) => {
       if (!dialog2.open || dialog2.classList.contains("is-closing")) return;
       dispatchDialogEvent(dialog2, "dialog:close:start");
@@ -63,7 +71,7 @@ const dialog = {
         if (!targetDialog) return;
         targetDialog._lastFocus = button;
         targetDialog.classList.remove("is-closing");
-        if (!targetDialog.open) targetDialog.showModal();
+        if (!targetDialog.open) openDialogByMode(targetDialog);
         requestAnimationFrame(() => {
           targetDialog.classList.add("is-open");
           resetDialogScroll(targetDialog);
@@ -71,7 +79,9 @@ const dialog = {
           updateNavButtons(targetDialog);
         });
         button.setAttribute("aria-expanded", "true");
-        document.body.style.overflow = "hidden";
+        if (isModalMode(targetDialog)) {
+          document.body.style.overflow = "hidden";
+        }
         if (isHashControlEnabled(targetDialog)) {
           window.location.hash = targetId;
         }
@@ -112,7 +122,7 @@ const dialog = {
             `.js-dialog-open[data-dialog-target="${dialog2.id}"]`
           );
           if (dialog2.id === hash) {
-            if (!dialog2.open) dialog2.showModal();
+            if (!dialog2.open) openDialogByMode(dialog2);
             requestAnimationFrame(() => {
               dialog2.classList.add("is-open");
               resetDialogScroll(dialog2);
@@ -121,7 +131,9 @@ const dialog = {
             });
             if (opener) opener.setAttribute("aria-expanded", "true");
             dialog2._lastFocus = null;
-            document.body.style.overflow = "hidden";
+            if (isModalMode(dialog2)) {
+              document.body.style.overflow = "hidden";
+            }
           } else if (dialog2.open && dialog2.id !== hash) {
             if (opener) opener.setAttribute("aria-expanded", "false");
             closeDialogAnimated(dialog2);
@@ -169,7 +181,7 @@ const dialog = {
       currentDialog.classList.remove("is-open");
       currentDialog.close();
       targetDialog._lastFocus = currentDialog._lastFocus;
-      targetDialog.showModal();
+      openDialogByMode(targetDialog);
       requestAnimationFrame(() => {
         targetDialog.classList.add("is-open");
         resetDialogScroll(targetDialog);
