@@ -27,7 +27,7 @@ const dialog = {
     dialogs.forEach((d) => {
       dialogMap.set(d.id, d);
     });
-    const isHashControlEnabled = (dialog2) => dialog2.dataset.hashControl === "true";
+    const isHashControlEnabled = (dialog2) => dialog2.dataset.hashControl === "true" && isModalMode(dialog2);
     const isModalMode = (dialog2) => dialog2.dataset.dialogMode !== "modeless";
     const openDialogByMode = (dialog2) => {
       if (isModalMode(dialog2)) {
@@ -178,15 +178,17 @@ const dialog = {
         targetIndex = groupDialogs.length - 1;
       }
       const targetDialog = groupDialogs[targetIndex];
+      targetDialog._lastFocus = currentDialog._lastFocus;
+      currentDialog._lastFocus = null;
       currentDialog.classList.remove("is-open");
       currentDialog.close();
-      targetDialog._lastFocus = currentDialog._lastFocus;
       openDialogByMode(targetDialog);
       requestAnimationFrame(() => {
         targetDialog.classList.add("is-open");
         resetDialogScroll(targetDialog);
         dispatchDialogEvent(targetDialog, "dialog:open");
         updateNavButtons(targetDialog);
+        targetDialog.focus();
         if (isHashControlEnabled(targetDialog)) {
           history.replaceState(null, "", `#${targetDialog.id}`);
         }

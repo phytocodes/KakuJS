@@ -283,12 +283,12 @@ const dialog: KakuPlugin = {
 
 			const targetDialog = groupDialogs[targetIndex];
 
+			targetDialog._lastFocus = currentDialog._lastFocus;
+
+			currentDialog._lastFocus = null;
 			currentDialog.classList.remove('is-open');
 			currentDialog.close();
 
-			targetDialog._lastFocus = currentDialog._lastFocus;
-
-			// 改修：モードを考慮して次のダイアログを開く
 			openDialogByMode(targetDialog);
 
 			requestAnimationFrame(() => {
@@ -297,6 +297,8 @@ const dialog: KakuPlugin = {
 				dispatchDialogEvent(targetDialog, 'dialog:open');
 
 				updateNavButtons(targetDialog);
+
+				targetDialog.focus();
 
 				if (isHashControlEnabled(targetDialog)) {
 					history.replaceState(null, '', `#${targetDialog.id}`);
