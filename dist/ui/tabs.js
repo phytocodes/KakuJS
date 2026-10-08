@@ -28,12 +28,26 @@ const tabs = {
         }
         panel.hidden = false;
       };
-      activateTabAndPanel(tabs2[0]);
-      tabs2.forEach((tab) => {
+      const activateByIndex = (index) => {
+        const targetTab = tabs2[index];
+        if (targetTab) {
+          activateTabAndPanel(targetTab);
+        } else {
+          console.warn("\u6307\u5B9A\u3055\u308C\u305F\u30A4\u30F3\u30C7\u30C3\u30AF\u30B9\u306E\u30BF\u30D6\u304C\u5B58\u5728\u3057\u307E\u305B\u3093:", index);
+        }
+      };
+      activateByIndex(0);
+      tabs2.forEach((tab, index) => {
         tab.addEventListener("click", () => {
-          activateTabAndPanel(tab);
+          activateByIndex(index);
         });
       });
+      tabsContainer.addEventListener("switch-tab", ((event) => {
+        const index = event.detail?.index;
+        if (typeof index === "number") {
+          activateByIndex(index);
+        }
+      }));
     });
   }
 };
